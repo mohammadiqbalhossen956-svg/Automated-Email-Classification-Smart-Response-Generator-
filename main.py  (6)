@@ -1,0 +1,47 @@
+import pandas as pd
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neural_network import MLPClassifier
+
+# 1. Email Dataset (Urgent, Query, Sales)
+data = {
+    'email_body': [
+        'URGENT: Server is down, please fix it now!', 'Immediate action required on security',
+        'Hello, can you tell me the price of your service?', 'I have a question about the features',
+        'Interested in buying the premium plan', 'I want to discuss a bulk purchase',
+        'Meeting scheduled for tomorrow at 10 AM', 'Thanks for the quick response'
+    ],
+    'category': ['Urgent', 'Urgent', 'General Query', 'General Query', 'Sales', 'Sales', 'General', 'General']
+}
+
+df = pd.DataFrame(data)
+
+# 2. Text Vectorization (NLP)
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(df['email_body'])
+y = df['category']
+
+# 3. Model Training (Multi-layer Perceptron)
+# এটি LSTM এর বিকল্প হিসেবে মোবাইলে খুব ভালো কাজ করে
+model = MLPClassifier(hidden_layer_sizes=(15, 10), max_iter=1000, random_state=42)
+model.fit(X, y)
+
+# 4. Auto-Response Logic (Generation)
+def generate_auto_reply(email_text):
+    vec = vectorizer.transform([email_text])
+    category = model.predict(vec)[0]
+    
+    # টেম্পলেট ভিত্তিক অটো-রেসপন্স
+    replies = {
+        'Urgent': "Subject: [Auto-Reply] Urgent Support Received\nBody: Hello, our team is working on your urgent request. Expected resolution within 2 hours.",
+        'General Query': "Subject: [Auto-Reply] Information Inquiry\nBody: Thank you for your interest! Our team will provide the requested details shortly.",
+        'Sales': "Subject: [Auto-Reply] Sales Interest\nBody: We are excited to help you grow! Our sales manager will contact you for a demo soon.",
+        'General': "Subject: [Auto-Reply] Acknowledgment\nBody: Thank you for your email. We have received it and will get back to you if necessary."
+    }
+    
+    return f"Detected Category: {category.upper()}\n\nGenerated Draft:\n{replies[category]}"
+
+# 5. Live Test
+print("--- Email Auto-Response System ---")
+test_email = input("Paste your email text here: ")
+print("\n" + generate_auto_reply(test_email))
